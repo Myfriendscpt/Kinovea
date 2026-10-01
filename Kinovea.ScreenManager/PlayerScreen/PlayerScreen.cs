@@ -932,6 +932,14 @@ namespace Kinovea.ScreenManager
             f.ShowDialog();
             f.Dispose();
         }
+
+        public void ShowGaitAnalysis()
+        {
+            FormGaitAnalysis f = new FormGaitAnalysis(frameServer.Metadata);
+            FormsHelper.Locate(f);
+            f.ShowDialog();
+            f.Dispose();
+        }
         #endregion
 
         public void AfterLoad()

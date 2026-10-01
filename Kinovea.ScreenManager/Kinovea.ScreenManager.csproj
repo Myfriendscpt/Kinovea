@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <Import Project="..\packages\OpenCvSharp4.runtime.win.4.10.0.20240616\build\net48\OpenCvSharp4.runtime.win.props" Condition="Exists('..\packages\OpenCvSharp4.runtime.win.4.10.0.20240616\build\net48\OpenCvSharp4.runtime.win.props')" />
   <PropertyGroup>
@@ -377,6 +377,12 @@
     <Compile Include="PlayerScreen\Forms\FormConfigureDrawingName.Designer.cs">
       <DependentUpon>FormConfigureDrawingName.cs</DependentUpon>
     </Compile>
+    <Compile Include="PlayerScreen\Forms\FormConfigureAngleTarget.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PlayerScreen\Forms\FormConfigureAngleTarget.Designer.cs">
+      <DependentUpon>FormConfigureAngleTarget.cs</DependentUpon>
+    </Compile>
     <Compile Include="ScreenConfig.cs" />
     <Compile Include="Tracking\Trackability\TrackablePoint.cs" />
     <Compile Include="Variables\CsvTextFieldParser.cs" />
@@ -441,6 +447,13 @@
     <Compile Include="Measurement\Plotting\FormMultiTrajectoryAnalysis.Designer.cs">
       <DependentUpon>FormMultiTrajectoryAnalysis.cs</DependentUpon>
     </Compile>
+    <Compile Include="Measurement\Plotting\FormGaitAnalysis.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Measurement\Plotting\FormGaitAnalysis.Designer.cs">
+      <DependentUpon>FormGaitAnalysis.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Measurement\Kinematics\GaitDetector.cs" />
     <Compile Include="Measurement\Plotting\TimeModel.cs" />
     <Compile Include="Measurement\Plotting\TimeSeriesPlotData.cs" />
     <Compile Include="Measurement\Plotting\TimeSeriesPlotSpecification.cs" />
@@ -1466,7 +1479,7 @@
       <Project>{8AA92254-A016-4A84-925C-F5B07E02F8A8}</Project>
       <Name>Kinovea.Services</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Kinovea.Video.FFMpeg\PlayerServer\PlayerServer.vcxproj">
+    <ProjectReference Include="..\Kinovea.Video.FFMpeg\Kinovea.Video.FFMpeg.csproj">
       <Project>{f80dbe6d-d394-4811-b5e6-7528f849c71a}</Project>
       <Name>Kinovea.Video.FFMpeg</Name>
     </ProjectReference>

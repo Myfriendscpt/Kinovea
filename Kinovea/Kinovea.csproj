@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -421,7 +421,9 @@
       <Project>{c0148b9e-a511-4631-a075-ae483d4153a8}</Project>
       <Name>Kinovea.Video.Bitmap</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Kinovea.Video.FFMpeg\PlayerServer\PlayerServer.vcxproj">
+
+    
+    <ProjectReference Include="..\Kinovea.Video.FFMpeg\Kinovea.Video.FFMpeg.csproj">
       <Project>{f80dbe6d-d394-4811-b5e6-7528f849c71a}</Project>
       <Name>Kinovea.Video.FFMpeg</Name>
     </ProjectReference>

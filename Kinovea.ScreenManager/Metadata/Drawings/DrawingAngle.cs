@@ -1,6 +1,6 @@
 
 /*
-Copyright © Joan Charmant 2008.
+Copyright ï¿½ Joan Charmant 2008.
 jcharmant@gmail.com 
  
 This file is part of Kinovea.
@@ -60,6 +60,10 @@ namespace Kinovea.ScreenManager
                 hash ^= counterClockwise.GetHashCode();
                 hash ^= supplementaryAngle.GetHashCode();
                 hash ^= showCircle.GetHashCode();
+                hash ^= targetRangeEnabled.GetHashCode();
+                hash ^= targetAngle.GetHashCode();
+                hash ^= targetTolerance.GetHashCode();
+                hash ^= targetAudioAlert.GetHashCode();
                 return hash; 
             }
         } 
@@ -91,6 +95,7 @@ namespace Kinovea.ScreenManager
                 mnuCounterClockwise.Checked = counterClockwise;
                 mnuSupplementaryAngle.Checked = supplementaryAngle;
                 mnuShowCircle.Checked = showCircle;
+                mnuTargetRange.Checked = targetRangeEnabled;
 
                 return contextMenu; 
             }
@@ -104,6 +109,37 @@ namespace Kinovea.ScreenManager
             get { return new AngleOptions(signedAngle, counterClockwise, supplementaryAngle); }
         }
         public CalibrationHelper CalibrationHelper { get; set; }
+
+        public bool TargetRangeEnabled
+        {
+            get { return targetRangeEnabled; }
+            set { targetRangeEnabled = value; }
+        }
+        public float TargetAngle
+        {
+            get { return targetAngle; }
+            set { targetAngle = value; }
+        }
+        public float TargetTolerance
+        {
+            get { return targetTolerance; }
+            set { targetTolerance = value; }
+        }
+        public bool TargetAudioAlert
+        {
+            get { return targetAudioAlert; }
+            set { targetAudioAlert = value; }
+        }
+        public Color TargetInRangeColor
+        {
+            get { return targetInRangeColor; }
+            set { targetInRangeColor = value; }
+        }
+        public Color TargetOutOfRangeColor
+        {
+            get { return targetOutOfRangeColor; }
+            set { targetOutOfRangeColor = value; }
+        }
         #endregion
 
         #region Members
@@ -122,12 +158,22 @@ namespace Kinovea.ScreenManager
         private bool supplementaryAngle = false;
         private bool showCircle = false;
 
+        // Target Range & Biofeedback
+        private bool targetRangeEnabled = false;
+        private float targetAngle = 90.0f;
+        private float targetTolerance = 5.0f;
+        private bool targetAudioAlert = false;
+        private Color targetInRangeColor = Color.LimeGreen;
+        private Color targetOutOfRangeColor = Color.Tomato;
+        private bool? lastInRangeState = null;
+
         #region Context menu
         private ToolStripMenuItem mnuOptions = new ToolStripMenuItem();
         private ToolStripMenuItem mnuSignedAngle = new ToolStripMenuItem();
         private ToolStripMenuItem mnuCounterClockwise = new ToolStripMenuItem();
         private ToolStripMenuItem mnuSupplementaryAngle = new ToolStripMenuItem();
         private ToolStripMenuItem mnuShowCircle = new ToolStripMenuItem();
+        private ToolStripMenuItem mnuTargetRange = new ToolStripMenuItem();
         #endregion
 
         private static readonly int defaultBackgroundAlpha = 92;
@@ -169,12 +215,15 @@ namespace Kinovea.ScreenManager
             mnuCounterClockwise.Click += mnuCounterClockwise_Click;
             mnuSupplementaryAngle.Click += mnuSupplementaryAngle_Click;
             mnuShowCircle.Click += mnuShowCircle_Click;
+            mnuTargetRange.Click += mnuTargetRange_Click;
 
             mnuOptions.DropDownItems.AddRange(new ToolStripItem[] {
                 mnuSignedAngle,
                 mnuCounterClockwise,
                 mnuSupplementaryAngle,
                 mnuShowCircle,
+                new ToolStripSeparator(),
+                mnuTargetRange,
             });
         }
         #endregion
@@ -199,9 +248,26 @@ namespace Kinovea.ScreenManager
             if (boundingBox.Size == Size.Empty)
                 return;
 
-            using(Pen penEdges = styleData.GetBackgroundPen((int)(opacityFactor*255)))
-            using(SolidBrush brushEdges = styleData.GetBackgroundBrush((int)(opacityFactor*255)))
-            using(SolidBrush brushFill = styleData.GetBackgroundBrush((int)(opacityFactor*defaultBackgroundAlpha)))
+            float measuredAngleDegrees = CalibrationHelper != null 
+                ? CalibrationHelper.ConvertAngle(angleHelper.CalibratedAngle) 
+                : (float)(Math.Abs(angleHelper.CalibratedAngle) * 180.0 / Math.PI);
+            bool inRange = Math.Abs(measuredAngleDegrees - targetAngle) <= targetTolerance;
+
+            if (targetRangeEnabled && targetAudioAlert)
+            {
+                if (lastInRangeState.HasValue && lastInRangeState.Value != inRange)
+                {
+                    TriggerBiofeedbackAudio(inRange);
+                }
+                lastInRangeState = inRange;
+            }
+
+            Color activeEdgeBase = targetRangeEnabled ? (inRange ? targetInRangeColor : targetOutOfRangeColor) : styleData.GetBackgroundColor();
+            Color activeFillBase = targetRangeEnabled ? (inRange ? targetInRangeColor : targetOutOfRangeColor) : styleData.GetBackgroundColor();
+
+            using(Pen penEdges = new Pen(Color.FromArgb((int)(opacityFactor * 255), activeEdgeBase)))
+            using(SolidBrush brushEdges = new SolidBrush(Color.FromArgb((int)(opacityFactor * 255), activeEdgeBase)))
+            using(SolidBrush brushFill = new SolidBrush(Color.FromArgb((int)(opacityFactor * defaultBackgroundAlpha), activeFillBase)))
             {
                 penEdges.Width = 2.0f;
                 
@@ -249,6 +315,25 @@ namespace Kinovea.ScreenManager
 
                 // Value
                 angleHelper.DrawText(canvas, opacityFactor, brushFill, pointO, transformer, CalibrationHelper, styleData);
+
+                // Target Biofeedback Indicator Badge
+                if (targetRangeEnabled)
+                {
+                    string statusText = inRange 
+                        ? "âœ“ IN TARGET" 
+                        : string.Format("{0:0.0}Â° {1}", Math.Abs(measuredAngleDegrees - targetAngle), measuredAngleDegrees < targetAngle ? "LOW" : "HIGH");
+                    using (Font badgeFont = new Font("Segoe UI", 9f, FontStyle.Bold))
+                    using (SolidBrush textBrush = new SolidBrush(Color.White))
+                    using (SolidBrush badgeBgBrush = new SolidBrush(Color.FromArgb((int)(opacityFactor * 220), activeEdgeBase)))
+                    {
+                        SizeF badgeSize = canvas.MeasureString(statusText, badgeFont);
+                        PointF badgePos = new PointF(pointO.X + 20, pointO.Y - 28);
+                        RectangleF badgeRect = new RectangleF(badgePos.X - 4, badgePos.Y - 2, badgeSize.Width + 8, badgeSize.Height + 4);
+                        canvas.FillRectangle(badgeBgBrush, badgeRect);
+                        canvas.DrawRectangle(penEdges, Rectangle.Round(badgeRect));
+                        canvas.DrawString(statusText, badgeFont, textBrush, badgePos);
+                    }
+                }
             }
         }
         public override int HitTest(PointF point, long currentTimestamp, DistortionHelper distorter, IImageToViewportTransformer transformer)
@@ -272,7 +357,7 @@ namespace Kinovea.ScreenManager
         }
         public override void MoveHandle(PointF point, int handle, Keys modifiers)
         {
-            int constraintAngleSubdivisions = 8; // (Constraint by 45° steps).
+            int constraintAngleSubdivisions = 8; // (Constraint by 45ï¿½ steps).
             switch (handle)
             {
                 case 1:
@@ -351,6 +436,24 @@ namespace Kinovea.ScreenManager
                     case "ShowCircle":
                         showCircle = XmlHelper.ParseBoolean(xmlReader.ReadElementContentAsString());
                         break;
+                    case "TargetRangeEnabled":
+                        targetRangeEnabled = XmlHelper.ParseBoolean(xmlReader.ReadElementContentAsString());
+                        break;
+                    case "TargetAngle":
+                        targetAngle = XmlHelper.ParseFloat(xmlReader.ReadElementContentAsString());
+                        break;
+                    case "TargetTolerance":
+                        targetTolerance = XmlHelper.ParseFloat(xmlReader.ReadElementContentAsString());
+                        break;
+                    case "TargetAudioAlert":
+                        targetAudioAlert = XmlHelper.ParseBoolean(xmlReader.ReadElementContentAsString());
+                        break;
+                    case "TargetInRangeColor":
+                        targetInRangeColor = XmlHelper.ParseColor(xmlReader.ReadElementContentAsString(), Color.LimeGreen);
+                        break;
+                    case "TargetOutOfRangeColor":
+                        targetOutOfRangeColor = XmlHelper.ParseColor(xmlReader.ReadElementContentAsString(), Color.Tomato);
+                        break;
                     case "DrawingStyle":
                         styleElements.ImportXML(xmlReader);
                         BindStyle();
@@ -392,6 +495,12 @@ namespace Kinovea.ScreenManager
                 w.WriteElementString("CCW", XmlHelper.WriteBoolean(counterClockwise));
                 w.WriteElementString("Supplementary", XmlHelper.WriteBoolean(supplementaryAngle));
                 w.WriteElementString("ShowCircle", XmlHelper.WriteBoolean(showCircle));
+                w.WriteElementString("TargetRangeEnabled", XmlHelper.WriteBoolean(targetRangeEnabled));
+                w.WriteElementString("TargetAngle", XmlHelper.WriteFloat(targetAngle));
+                w.WriteElementString("TargetTolerance", XmlHelper.WriteFloat(targetTolerance));
+                w.WriteElementString("TargetAudioAlert", XmlHelper.WriteBoolean(targetAudioAlert));
+                w.WriteElementString("TargetInRangeColor", XmlHelper.WriteColor(targetInRangeColor, true));
+                w.WriteElementString("TargetOutOfRangeColor", XmlHelper.WriteColor(targetOutOfRangeColor, true));
             }
 
             if (ShouldSerializeStyle(filter))
@@ -502,6 +611,44 @@ namespace Kinovea.ScreenManager
             InvalidateFromMenu(sender);
         }
 
+        private void mnuTargetRange_Click(object sender, EventArgs e)
+        {
+            using (FormConfigureAngleTarget dlg = new FormConfigureAngleTarget(this))
+            {
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    CaptureMemento(SerializationFilter.Core);
+                    lastInRangeState = null;
+                    SignalAllTrackablePointsMoved();
+                    InvalidateFromMenu(sender);
+                }
+            }
+        }
+
+        private void TriggerBiofeedbackAudio(bool inRange)
+        {
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    if (inRange)
+                    {
+                        Console.Beep(880, 80);
+                        Console.Beep(1175, 120);
+                    }
+                    else
+                    {
+                        Console.Beep(330, 80);
+                        Console.Beep(262, 100);
+                    }
+                }
+                catch
+                {
+                    try { System.Media.SystemSounds.Beep.Play(); } catch { }
+                }
+            });
+        }
+
         #endregion
 
         #region IMeasurable implementation
@@ -573,6 +720,7 @@ namespace Kinovea.ScreenManager
             mnuCounterClockwise.Text = ScreenManagerLang.mnuCounterClockwise;
             mnuSupplementaryAngle.Text = ScreenManagerLang.mnuSupplementaryAngle;
             mnuShowCircle.Text = Kinovea.ScreenManager.Languages.ScreenManagerLang.mnuShowCircle;
+            mnuTargetRange.Text = "Target Range & Biofeedback...";
         }
         #endregion
     } 

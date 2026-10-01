@@ -196,6 +196,8 @@ namespace Kinovea.ScreenManager
                     mnuTracking,
                     mnuOptions,
                     mnuMeasurement,
+                    new ToolStripSeparator(),
+                    mnuGaitAnalysis,
                 });
 
                 bool isTracking = trackStatus == TrackStatus.Edit;
@@ -212,6 +214,7 @@ namespace Kinovea.ScreenManager
                 mnuVisibility.Enabled = trackStatus == TrackStatus.Interactive;
                 mnuMeasurement.Enabled = trackStatus == TrackStatus.Interactive;
                 mnuOptions.Enabled = trackStatus == TrackStatus.Interactive;
+                mnuGaitAnalysis.Enabled = trackStatus == TrackStatus.Interactive && positions.Count > 5;
 
                 // Disable the keyframe labels menu if we are not showing anything.
                 // This serves as a hint that we must first select a measurement type.
@@ -221,6 +224,11 @@ namespace Kinovea.ScreenManager
                 return contextMenu;
             }
         }
+        public int PointsCount
+        {
+            get { return positions.Count; }
+        }
+
         public FilteredTrajectory FilteredTrajectory
         {
             get { return filteredTrajectory; }
@@ -326,6 +334,7 @@ namespace Kinovea.ScreenManager
         private ToolStripMenuItem mnuUseKeyframeColor = new ToolStripMenuItem();
         private ToolStripMenuItem mnuIsInteractiveTrack = new ToolStripMenuItem();
         private ToolStripMenuItem mnuShowRotationCircle = new ToolStripMenuItem();
+        private ToolStripMenuItem mnuGaitAnalysis = new ToolStripMenuItem();
         #endregion
 
         #region Color cycler
@@ -479,6 +488,8 @@ namespace Kinovea.ScreenManager
             mnuUseKeyframeColor.Click += MnuUseKeyframeColor_Click;
             mnuIsInteractiveTrack.Click += MnuIsInteractiveTrack_Click;
             mnuShowRotationCircle.Click += MnuShowRotationCircle_Click;
+            mnuGaitAnalysis.Image = Properties.Drawings.walking_16;
+            mnuGaitAnalysis.Click += MnuGaitAnalysis_Click;
 
             // Hide the "interactive track option" it's causing all sorts of difficulties 
             // when there are multiple tracks in the same frame it makes it very hard to
@@ -1485,6 +1496,18 @@ namespace Kinovea.ScreenManager
             InvalidateFromMenu(sender);
         }
 
+        private void MnuGaitAnalysis_Click(object sender, EventArgs e)
+        {
+            if (parentMetadata != null)
+            {
+                using (FormGaitAnalysis dlg = new FormGaitAnalysis(parentMetadata, this))
+                {
+                    FormsHelper.Locate(dlg);
+                    dlg.ShowDialog();
+                }
+            }
+        }
+
         #endregion
 
         #region Tracking
@@ -2259,6 +2282,7 @@ namespace Kinovea.ScreenManager
 
         private void ReloadMenusCulture()
         {
+            mnuGaitAnalysis.Text = "Gait Analysis && Cadence…";
             // Visibility
             mnuVisibility.Text = ScreenManagerLang.Generic_Visibility;
             mnuHideBefore.Text = ScreenManagerLang.mnuHideBefore;

@@ -170,6 +170,7 @@ namespace Kinovea.ScreenManager
         private ToolStripMenuItem mnuLinearKinematics = new ToolStripMenuItem();
         private ToolStripMenuItem mnuAngularKinematics = new ToolStripMenuItem();
         private ToolStripMenuItem mnuAngleAngleDiagram = new ToolStripMenuItem();
+        private ToolStripMenuItem mnuGaitAnalysis = new ToolStripMenuItem();
 
         // Options
         private ToolStripMenuItem mnuVariables = new ToolStripMenuItem();
@@ -678,6 +679,10 @@ namespace Kinovea.ScreenManager
             mnuAngularKinematics.Click += mnuAngularKinematics_OnClick;
             mnuAngularKinematics.MergeAction = MergeAction.Append;
 
+            mnuGaitAnalysis.Image = Properties.Drawings.walking_16;
+            mnuGaitAnalysis.Click += mnuGaitAnalysis_OnClick;
+            mnuGaitAnalysis.MergeAction = MergeAction.Append;
+
             mnuAngleAngleDiagram.Image = Properties.Resources.plot_16;
             mnuAngleAngleDiagram.Click += mnuAngleAngleDiagram_OnClick;
             mnuAngleAngleDiagram.MergeAction = MergeAction.Append;
@@ -695,7 +700,8 @@ namespace Kinovea.ScreenManager
                 mnuScatterDiagram,
                 mnuLinearKinematics,
                 mnuAngularKinematics,
-                mnuAngleAngleDiagram
+                mnuAngleAngleDiagram,
+                mnuGaitAnalysis
             });
 
             #endregion
@@ -1273,6 +1279,7 @@ namespace Kinovea.ScreenManager
                     mnuLinearKinematics.Enabled = true;
                     mnuAngularKinematics.Enabled = true;
                     mnuAngleAngleDiagram.Enabled = true;
+                    mnuGaitAnalysis.Enabled = true;
 
                     mnuCoordinateSystem.Checked = activeScreen.CoordinateSystemVisible;
                     mnuTestGrid.Checked = activeScreen.TestGridVisible;
@@ -1327,6 +1334,7 @@ namespace Kinovea.ScreenManager
                     mnuLinearKinematics.Enabled = false;
                     mnuAngularKinematics.Enabled = false;
                     mnuAngleAngleDiagram.Enabled = false;
+                    mnuGaitAnalysis.Enabled = false;
 
                     mnuCoordinateSystem.Checked = activeScreen.CoordinateSystemVisible;
                     mnuTestGrid.Checked = activeScreen.TestGridVisible;
@@ -1390,6 +1398,7 @@ namespace Kinovea.ScreenManager
                 mnuLinearKinematics.Enabled = false;
                 mnuAngularKinematics.Enabled = false;
                 mnuAngleAngleDiagram.Enabled = false;
+                mnuGaitAnalysis.Enabled = false;
 
                 mnuCoordinateSystem.Checked = false;
                 mnuTestGrid.Checked = false;
@@ -2075,6 +2084,7 @@ namespace Kinovea.ScreenManager
             mnuLinearKinematics.Text = ScreenManagerLang.DataAnalysis_LinearKinematics + "…";
             mnuAngularKinematics.Text = ScreenManagerLang.DataAnalysis_AngularKinematics + "…";
             mnuAngleAngleDiagram.Text = ScreenManagerLang.DataAnalysis_AngleAngleDiagrams + "…";
+            mnuGaitAnalysis.Text = "Gait Cycle && Cadence Phase Detector…";
 
             // Options
             mnuVariables.Text = Kinovea.ScreenManager.Languages.ScreenManagerLang.mnuContext;
@@ -2597,6 +2607,14 @@ namespace Kinovea.ScreenManager
                 return;
 
             ps.ShowAngleAngleDiagram();
+        }
+        private void mnuGaitAnalysis_OnClick(object sender, EventArgs e)
+        {
+            PlayerScreen ps = activeScreen as PlayerScreen;
+            if (ps == null)
+                return;
+
+            ps.ShowGaitAnalysis();
         }
         #endregion
 
